@@ -202,18 +202,49 @@ window.addEventListener('scroll', setScrollProgress, { passive: true });
 if (!prefersReducedMotion && window.matchMedia('(pointer: fine)').matches) {
   const heroVisual = document.querySelector('.hero-visual');
   const profileCard = document.querySelector('.profile-card');
+  const interactiveCards = Array.from(document.querySelectorAll('.focus-card, .projects-empty'));
+  const pointerTargets = [
+    ...(heroVisual && profileCard ? [{ container: heroVisual, target: profileCard, strength: 8 }] : []),
+    ...interactiveCards.map((card) => ({ container: card, target: card, strength: 7 })),
+  ];
+
+  const resetTilt = (target) => {
+    target.style.setProperty('--tilt-x', '0deg');
+    target.style.setProperty('--tilt-y', '0deg');
+    target.style.setProperty('--glow-x', '50%');
+    target.style.setProperty('--glow-y', '50%');
+  };
+
+  const bindTilt = ({ container, target, strength }) => {
+    let frame = 0;
+    let nextX = 0;
+    let nextY = 0;
+    container.addEventListener('pointermove', (event) => {
+      const bounds = container.getBoundingClientRect();
+      nextX = (event.clientX - bounds.left) / bounds.width - 0.5;
+      nextY = (event.clientY - bounds.top) / bounds.height - 0.5;
+      if (!frame) {
+        frame = requestAnimationFrame(() => {
+          target.style.setProperty('--tilt-x', `${nextY * -strength}deg`);
+          target.style.setProperty('--tilt-y', `${nextX * strength}deg`);
+          target.style.setProperty('--glow-x', `${(nextX + 0.5) * 100}%`);
+          target.style.setProperty('--glow-y', `${(nextY + 0.5) * 100}%`);
+          frame = 0;
+        });
+      }
+    });
+    container.addEventListener('pointerleave', () => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      resetTilt(target);
+    });
+  };
+
+  pointerTargets.forEach(bindTilt);
+
   if (heroVisual && profileCard) {
-    heroVisual.addEventListener('pointermove', (event) => {
-      const bounds = heroVisual.getBoundingClientRect();
-      const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-      const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-      profileCard.style.setProperty('--tilt-x', `${y * -5}deg`);
-      profileCard.style.setProperty('--tilt-y', `${x * 5}deg`);
-    });
-    heroVisual.addEventListener('pointerleave', () => {
-      profileCard.style.setProperty('--tilt-x', '0deg');
-      profileCard.style.setProperty('--tilt-y', '0deg');
-    });
+    profileCard.addEventListener('pointerenter', () => profileCard.style.setProperty('--lift', '-8px'));
+    profileCard.addEventListener('pointerleave', () => profileCard.style.setProperty('--lift', '0px'));
   }
 }
 
