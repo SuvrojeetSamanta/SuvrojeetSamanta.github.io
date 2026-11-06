@@ -32,6 +32,7 @@ const copy = {
 const navigation = [
   { label: 'Profile', href: '#about' },
   { label: 'Strengths', href: '#skills' },
+  { label: 'Focus', href: '#focus' },
   { label: 'Projects', href: '#projects' },
   { label: 'Journey', href: '#journey' },
 ];
@@ -39,8 +40,22 @@ const navigation = [
 const pageSections = [
   { id: 'about', number: '01', label: 'Profile', title: 'Learning how the world', emphasis: 'fits together.' },
   { id: 'skills', number: '02', label: 'Strengths', title: 'Foundations I’m', emphasis: 'developing.' },
-  { id: 'projects', number: '03', label: 'Projects', title: 'Your work,', emphasis: 'well presented.' },
-  { id: 'journey', number: '04', label: 'The journey', title: 'Currently under', emphasis: 'construction.' },
+  { id: 'focus', number: '03', label: 'Current focus', title: 'Learning with', emphasis: 'direction.' },
+  { id: 'projects', number: '04', label: 'Projects', title: 'Your work,', emphasis: 'well presented.' },
+  { id: 'journey', number: '05', label: 'The journey', title: 'Currently under', emphasis: 'construction.' },
+  { id: 'contact', number: '06', label: 'Contact', title: 'Let’s build something', emphasis: 'worthwhile.' },
+];
+
+const focusAreas = [
+  { icon: 'layers', label: 'Core foundations', detail: 'Developing a strong base in mechanics, materials, surveying, and engineering mathematics.' },
+  { icon: 'compass', label: 'Built environment', detail: 'Learning how structures, infrastructure, and public spaces work together in real places.' },
+  { icon: 'ruler', label: 'Practical thinking', detail: 'Turning observations into clear questions, useful documentation, and better design decisions.' },
+];
+
+const academicSnapshot = [
+  { value: '01', label: 'Year of study' },
+  { value: '04', label: 'Year degree path' },
+  { value: 'KOL', label: 'Study location' },
 ];
 
 const strengths = [
@@ -131,6 +146,16 @@ const renderStrengths = () => {
   `;
 };
 
+const renderFocus = () => {
+  document.querySelector('#focus-content').innerHTML = `
+    <div class="focus-intro">
+      <div>${sectionHeading(pageSections[2], true)}</div>
+      <div class="snapshot" aria-label="Academic snapshot">${academicSnapshot.map((item) => `<div class="snapshot-item"><strong>${item.value}</strong><span>${item.label}</span></div>`).join('')}</div>
+    </div>
+    <div class="focus-grid">${focusAreas.map((item, index) => `<article class="focus-card"><div class="focus-card-top"><span class="focus-index">0${index + 1}</span>${icon(item.icon, 'focus-icon')}</div><h3>${item.label}</h3><p>${item.detail}</p></article>`).join('')}</div>
+  `;
+};
+
 const renderProjects = () => {
   const projectMarkup = projects.length
     ? projects.map((project, index) => `<article class="card"><div class="card-index">${String(index + 1).padStart(2, '0')}</div><h3>${project.title}</h3><p>${project.description}</p><p class="card-meta">${project.meta}</p>${project.href ? `<a href="${project.href}" target="_blank" rel="noreferrer">${project.action || 'View project'} ${icon('arrow-up-right')}</a>` : ''}</article>`).join('')
@@ -143,7 +168,7 @@ const renderJourney = () => {
 };
 
 const renderContact = () => {
-  document.querySelector('#contact-content').innerHTML = `<div class="contact-grid"><div><p class="section-number">05 / Contact</p><h2>${copy.contactTitle} <em>${copy.contactEmphasis}</em></h2></div><div><p>${copy.contactDescription}</p><a class="email-link" href="mailto:${profile.email}">${profile.email} ${icon('arrow-up-right')}</a></div></div><ul class="contact-links">${contactLinks.map((item) => `<li><a href="${item.href}" target="_blank" rel="noreferrer">${item.label} ${icon('arrow-up-right')}</a></li>`).join('')}</ul>`;
+  document.querySelector('#contact-content').innerHTML = `<div class="contact-grid"><div><p class="section-number">${pageSections[5].number} / ${pageSections[5].label}</p><h2>${copy.contactTitle} <em>${copy.contactEmphasis}</em></h2></div><div><p>${copy.contactDescription}</p><a class="email-link" href="mailto:${profile.email}">${profile.email} ${icon('arrow-up-right')}</a></div></div><ul class="contact-links">${contactLinks.map((item) => `<li><a href="${item.href}" target="_blank" rel="noreferrer">${item.label} ${icon('arrow-up-right')}</a></li>`).join('')}</ul>`;
 };
 
 const renderFooter = () => {
@@ -154,6 +179,7 @@ renderNavigation();
 renderHero();
 renderAbout();
 renderStrengths();
+renderFocus();
 renderProjects();
 renderJourney();
 renderContact();
@@ -164,6 +190,32 @@ const nav = document.querySelector('.primary-nav');
 const navLinks = Array.from(document.querySelectorAll('.primary-nav a'));
 const sections = Array.from(document.querySelectorAll('main section[id]'));
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const setScrollProgress = () => {
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  document.documentElement.style.setProperty('--scroll-progress', `${scrollable ? (window.scrollY / scrollable) * 100 : 0}%`);
+};
+
+setScrollProgress();
+window.addEventListener('scroll', setScrollProgress, { passive: true });
+
+if (!prefersReducedMotion && window.matchMedia('(pointer: fine)').matches) {
+  const heroVisual = document.querySelector('.hero-visual');
+  const profileCard = document.querySelector('.profile-card');
+  if (heroVisual && profileCard) {
+    heroVisual.addEventListener('pointermove', (event) => {
+      const bounds = heroVisual.getBoundingClientRect();
+      const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+      const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+      profileCard.style.setProperty('--tilt-x', `${y * -5}deg`);
+      profileCard.style.setProperty('--tilt-y', `${x * 5}deg`);
+    });
+    heroVisual.addEventListener('pointerleave', () => {
+      profileCard.style.setProperty('--tilt-x', '0deg');
+      profileCard.style.setProperty('--tilt-y', '0deg');
+    });
+  }
+}
 
 if (menuToggle && nav) {
   menuToggle.addEventListener('click', () => {
